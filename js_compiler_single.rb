@@ -73,10 +73,14 @@ module LALR
           |#{@compiler_name ? "var context = new #{@compiler_name}();" : ""}
           |var start = new Date().getTime();
           |var tree = new R[0]();
-          |console.log("Constructing tree: " + (new Date().getTime() - start));
+          |#{
+          #console.log("Constructing tree: " + (new Date().getTime() - start));
+          }
           |var start = new Date().getTime();
           |tree.e();
-          |console.log("Evaluating tree: " + (new Date().getTime() - start));
+          |#{
+          #console.log("Evaluating tree: " + (new Date().getTime() - start));
+          }
           |return [$.join(""), context._dependencies];
         |}
       end

@@ -46,14 +46,21 @@ module LALR
         |{
           |var start = new Date().getTime();
           |var matches = this._lexer.matches();
-          |console.log("Matching: " + (new Date().getTime() - start));
+          |#{
+          #console.log("Matching: " + (new Date().getTime() - start));
+          }
           |start = new Date().getTime();
           |var tokens = this._lexer.tokens();
-          |console.log("Lexing: " + (new Date().getTime() - start));
+          |#{
+          #console.log("Lexing: " + (new Date().getTime() - start));
+          }
           |try {
             |start = new Date().getTime();
             |var derivation = this._parser.parse(tokens);
-            |console.log("Parsing: " + (new Date().getTime() - start));
+            |
+            #{
+            #console.log("Parsing: " + (new Date().getTime() - start));
+            }
           |} catch (e) {
             |var index = e - 1;
             |var error = "Unexpected token: " + matches[index] + "\\n\\n";
@@ -62,13 +69,16 @@ module LALR
               |error += i == index ? ("  " + matches[i] + "  ") : matches[i];
             |}
             |error += "\\n\\nRegex matched: " + tokens[index];
-            |print(error);
+            |throw(error);
           |}
           |start = new Date().getTime();
           |var result = this._parser.compile(matches, derivation);
-          |console.log("Compiling: " + (new Date().getTime() - start));
-          |console.log("Time: " + (new Date().getTime() - this._start));
-          |console.log(result);
+          |
+          #{
+          #console.log("Compiling: " + (new Date().getTime() - start));
+          #console.log("Time: " + (new Date().getTime() - this._start));
+          #console.log(result);
+          }
           |return new Executable(result[0], result[1]);
         |}
         |function preprocess(str, path, flags)

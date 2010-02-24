@@ -14,14 +14,15 @@ objj_compiler.prototype.parse = function()
 {
 var start = new Date().getTime();
 var matches = this._lexer.matches();
-console.log("Matching: " + (new Date().getTime() - start));
+
 start = new Date().getTime();
 var tokens = this._lexer.tokens();
-console.log("Lexing: " + (new Date().getTime() - start));
+
 try {
 start = new Date().getTime();
 var derivation = this._parser.parse(tokens);
-console.log("Parsing: " + (new Date().getTime() - start));
+
+
 } catch (e) {
 var index = e - 1;
 var error = "Unexpected token: " + matches[index] + "\n\n";
@@ -30,13 +31,12 @@ for (var i = Math.max(index - 20, 0); i < Math.min(matches.length, index + 10); 
 error += i == index ? ("  " + matches[i] + "  ") : matches[i];
 }
 error += "\n\nRegex matched: " + tokens[index];
-print(error);
+throw(error);
 }
 start = new Date().getTime();
 var result = this._parser.compile(matches, derivation);
-console.log("Compiling: " + (new Date().getTime() - start));
-console.log("Time: " + (new Date().getTime() - this._start));
-console.log(result);
+
+
 return new Executable(result[0], result[1]);
 }
 function preprocess(str, path, flags)
@@ -161,10 +161,10 @@ var $ = [];
 var context = new compiler();
 var start = new Date().getTime();
 var tree = new R[0]();
-console.log("Constructing tree: " + (new Date().getTime() - start));
+
 var start = new Date().getTime();
 tree.e();
-console.log("Evaluating tree: " + (new Date().getTime() - start));
+
 return [$.join(""), context._dependencies];
 }
 exports.preprocess = preprocess;
