@@ -391,18 +391,18 @@ rule(:JS_ELEMENT => :OBJJ_IMPORT) {
 
 rule(:OBJJ_IMPORT => [OBJJ_IMPORT_TAG_LITERAL]){
   '$.push("objj_executeFile(\"");
-  var path = /\<(.*)\>/.exec($1)[1];
-  $.push(path);
+  var url = /\<(.*)\>/.exec($1)[1];
+  $.push(url);
   $.push("\", false);");
-  context._dependencies.push(new FileDependency(path, false));'
+  context._dependencies.push(new FileDependency(new CFURL(url), false));'
 }
 
 rule(:OBJJ_IMPORT => [OBJJ_IMPORT, JS_STRING_LITERAL]){
   '$.push("objj_executeFile(\"");
-  var path = $2.slice(1, $2.length-1);
-  $.push(path);
+  var url = $2.slice(1, $2.length-1);
+  $.push(url);
   $.push("\", true);");
-  context._dependencies.push(new FileDependency(path, true));'
+  context._dependencies.push(new FileDependency(new CFURL(url), true));'
 }
 
 rule(:JS_KEY_IDENTIFIER => JS_IDENTIFIER){'$.push($1);'}
@@ -533,12 +533,16 @@ rule(:JS_ASSIGN_EXPR => [:JS_UNARY_DEREF, JS_EQ, :JS_ASSIGN_EXPR]) {
     end
     
     header do
-      'var OBJJ_PREPROCESSOR_DEBUG_SYMBOLS = 1 << 0,
-       OBJJ_PREPROCESSOR_TYPE_SIGNATURES = 1 << 1;'
+      'exports.Preprocessor = Preprocessor;
+
+       Preprocessor.Flags = { };
+
+       Preprocessor.Flags.IncludeDebugSymbols      = 1 << 0;
+       Preprocessor.Flags.IncludeTypeSignatures    = 1 << 1;'
     end
     
     footer do
-      'exports.preprocess = preprocess;'
+      ''
     end
     
   end

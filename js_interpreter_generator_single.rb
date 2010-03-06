@@ -31,7 +31,7 @@ module LALR
     def generate_interface_single
       result = <<-end.here_with_pipe
         |#{@header.gsub(/\n\s*/, "")}
-        |function #{@name}_compiler(str, path, flags)
+        |function Preprocessor(str, url, flags)
         |{
           |this._start = new Date().getTime();
           |this._lexer = new #{@name}_lexer(str);
@@ -40,9 +40,9 @@ module LALR
           |this._code = str;
           |this._dependencies = [];
           |this._flags = flags;
-          |this._path = path;
+          |this._URL = url;
         |}
-        |#{@name}_compiler.prototype.parse = function()
+        |Preprocessor.prototype.parse = function()
         |{
           |var start = new Date().getTime();
           |var matches = this._lexer.matches();
@@ -79,12 +79,12 @@ module LALR
           #console.log("Time: " + (new Date().getTime() - this._start));
           #console.log(result);
           }
-          |return new Executable(result[0], result[1]);
+          |return new Executable(result[0], result[1], this._URL);
         |}
-        |function preprocess(str, path, flags)
+        |exports.preprocess = function(str, url, flags)
         |{
-          |return new #{@name}_compiler(str, path, flags).parse();
-        |}
+          |return new Preprocessor(str, url, flags).parse();
+        |};
       end
       result + generate_lexer_single + generate_parser_single + "\n" + @footer
     end
