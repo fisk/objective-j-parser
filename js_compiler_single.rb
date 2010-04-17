@@ -35,27 +35,57 @@ module LALR
           |}
           |N.prototype.e = function(){$.push(this.$0);};
           |var R = [#{
-            @rules.size.times.map do |i|
-              rule = @rules[i]
+            all_rules = @rules | @deleted_rules
+            all_rules.size.times.map do |i|
+              rule = all_rules[i]
               prods = rule.productions
               
               str = "function N#{i}(){"
               if i == 0
-                str << "n = new R[o[--di]];"
-                str << "this.e = function(){this.$1.e();};"
-                str << "this.$1=n;"
+                str << "{if(o.length > 0)this.$1=new R[o[--di]];this.e = function(){if(this.$1)this.$1.e();};}"
               else
-                prods.size.times.reverse_each do |p|
-                  product = prods[p]
-                  case product
-                    when Symbol
-                      str << "this.$#{p+1}=new R[o[--di]];"
-                    when Regexp
-                      if not known_token_set.include? token_to_num[p]
-                        str << "this.$#{p+1}=new N();"
-                      else
-                        str << "ti--;"
+                if rule.original_rule and not rule.epsilon? # Cloned rule
+                  deleted_indices = rule.epsilon_indices
+                  oprods = rule.original_rule.productions
+                  
+                  oprods.size.times.reverse_each do |p|
+                    if deleted_indices.include?(p)
+                      del_prod = rule.original_rule.productions[p]
+                      del_rule = @deleted_rules.select{|x|x.name == del_prod}.first
+                      child_index = all_rules.index del_rule
+                      str << "this.$#{p+1} = new R[#{child_index}]();" unless del_prod == Epsilon.instance
+                    else
+                      product = oprods[p]
+                      case product
+                        when Symbol
+                          str << "this.$#{p+1}=new R[o[--di]]();"
+                        when Regexp
+                          if not known_token_set.include? token_to_num[p]
+                            str << "this.$#{p+1}=new N();"
+                          else
+                            str << "ti--;"
+                          end
                       end
+                    end
+                  end
+                elsif rule.epsilon?() and rule.original_rule # deleted rule
+                  del_prod = rule.original_rule.productions[rule.epsilon_indices.first]
+                  del_rule = @deleted_rules.select{|x| x.name == del_prod}.first
+                  child_index = all_rules.index del_rule
+                  str << "this.$1 = new R[#{child_index}];" unless del_prod == Epsilon.instance
+                else
+                  prods.size.times.reverse_each do |p|
+                    product = prods[p]
+                    case product
+                      when Symbol
+                        str << "this.$#{p+1}=new R[o[--di]]();"
+                      when Regexp
+                        if not known_token_set.include? token_to_num[p]
+                          str << "this.$#{p+1}=new N();"
+                        else
+                          str << "ti--;"
+                        end
+                    end
                   end
                 end
               end
@@ -64,8 +94,10 @@ module LALR
             end.join(",")
           }];
           |#{
-            (1...@rules.size).each.map do |i|
-              evaluator = @rule_evaluators[i-1]
+            (1...all_rules.size).each.map do |i|
+              rule = all_rules[i]
+              rule = rule.original_rule while rule.original_rule
+              evaluator = @rule_evaluators[rule]
               "R[#{i}].prototype.e = function(){#{evaluator}};"
             end.join("")
           }

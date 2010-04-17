@@ -105,6 +105,8 @@ class InterpreterGenerator
 
   OBJJ_IMPLEMENTATION = /@implementation(?![$\w])/
   OBJJ_ACCESSORS = /@accessors(?![$\w])/
+  OBJJ_OUTLET = /@outlet(?![$\w])/
+  OBJJ_ACTION = /@action(?![$\w])/
   OBJJ_CLASS = /@class(?![$\w])/
   OBJJ_END = /@end(?![$\w])/
   OBJJ_IMPORT = /@import(?![$\w])/
@@ -219,6 +221,8 @@ class InterpreterGenerator
     
     token OBJJ_IMPLEMENTATION, "@implementation"
     token OBJJ_ACCESSORS, "@accessors"
+    token OBJJ_OUTLET, "@outlet"
+    token OBJJ_ACTION, "@action"
     token OBJJ_CLASS, "@class"
     token OBJJ_END, "@end"
     token OBJJ_IMPORT_TAG_LITERAL

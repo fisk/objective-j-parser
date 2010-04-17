@@ -26,8 +26,20 @@ module LALR
       str
     end
     
+    def hash()
+      @name.hash + @productions.hash
+    end
+    
     def ==(arg)
       @name == arg.name and @productions == arg.productions
+    end
+    
+    def eql?(arg)
+      @name == arg.name and @productions == arg.productions
+    end
+    
+    def epsilon?()
+        (productions.include?(Epsilon.instance)) or productions.length == 0
     end
   end
   

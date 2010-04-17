@@ -15,6 +15,7 @@ require 'js_compiler'
 require 'js_parser'
 require 'js_lexer'
 require 'js_interpreter_generator_single'
+require 'epsilon_eater'
 
 class String
   def here_with_pipe
@@ -57,18 +58,20 @@ module LALR
     end
     
     def rule(arg)
+      rule = nil
       arg.each do |k,v|
         if v.is_a? Array
           v.size.times do |i|
             v[i] = fix_regex v[i] if v[i].is_a? Regexp
           end
-          @rules << Rule.new(k, v)
+          rule = Rule.new(k, v)
         else
           v = fix_regex v if v.is_a? Regexp
-          @rules << Rule.new(k, [v])
+          rule = Rule.new(k, [v])
         end
       end
-      @rule_evaluators << yield.gsub(/\$(\d+)/m){|m|"this.$#{m[1].to_i}.$0"}.
+      @rules << rule
+      @rule_evaluators[rule] = yield.gsub(/\$(\d+)/m){|m|"this.$#{m[1].to_i}.$0"}.
         gsub(/\${2}/m, 'this.$0').gsub(/\@(\d+)/m){|m|"this.$#{m[1].to_i}"}.
         gsub(/\@{2}/m, 'this').gsub(/\n\s*/m, "")
     end
@@ -79,7 +82,7 @@ module LALR
     
     def initialize(arg, file)
       @rules = []
-      @rule_evaluators = []
+      @rule_evaluators = {}
       @tokens = []
       @token_lit = {}
       @comments = []
@@ -102,35 +105,46 @@ module LALR
       sm
     end
     
-    def generate_interpreter
-      our_dump = dump(@rules.map{|rule|rule.name.to_s + rule.productions.to_s}) + 
-        dump(@start) + dump(@tokens.sort{|a, b|a.source <=> b.source}) + dump(@comments.sort{|a, b|a.source <=> b.source})
-      current_dump = ""
-      File.open(@file + ".grammar", "r"){|f|
-        current_dump = f.read
-      } if File.exists?(@file + ".grammar")
+    def pre_generation_methods
+      epsilon_eater = EpsilonEater.new(@rules, @rule_evaluators)
+      epsilon_eater.get_rid_of_epsilons
       
-      if Digest::SHA256.digest(our_dump) == Digest::SHA256.digest(current_dump) and 
-          File.exists?(@file + ".gotos") and File.exists?(@file + ".actions")
-        File.open(@file + ".gotos", "r"){|f|
-          @gotos = Marshal.restore(f.read())
-        }
-        File.open(@file + ".actions", "r"){|f|
-          @actions = Marshal.restore(f.read())
-        }
-        @rules.insert 0, Rule.new(:S, [@start])
+      @rules = epsilon_eater.rules
+      @deleted_rules = epsilon_eater.deleted_rules
+      @new_rules = epsilon_eater.new_rules
+      @rule_evaluators = epsilon_eater.rule_evaluators
+      
+      @rules.insert 0, Rule.new(:S, [@start]) # agument grammar
+      puts "NEW RULES"
+      puts epsilon_eater.new_rules
+      puts "DELETED RULES"
+      puts epsilon_eater.deleted_rules
+      puts "RULES:"
+      (@rules|@deleted_rules).each_with_index{|r, i|puts "#{i}: #{r}"}
+    end
+    
+    def generate_interpreter
+      pre_generation_methods
+      our_dump = Marshal.dump({start: @start, tokens: @tokens.sort{|a, b|a.source <=> b.source}, rules: @rules})
+      current_dump = ""
+      File.open(@file + ".cache", "r"){|f|
+        current_dump = f.read
+      } if File.exists?(@file + ".cache")
+      
+      if Digest::SHA256.digest(our_dump) == Digest::SHA256.digest(current_dump) and File.exists?(@file + ".grammar")
+        content = ""
+        File.open(@file + ".grammar", "r"){|f|content = f.read}
+        dict = Marshal.restore(content)
+        @actions, @gotos = dict[:actions], dict[:gotos]
       else
-        generator = TableGenerator.new(@rules, @start)
+        generator = TableGenerator.new(@rules)
         @actions, @gotos = generator.generate_tables
         
-        File.open(@file + ".grammar", "w"){|f|
+        File.open(@file + ".cache", "w"){|f|
           f.write(our_dump)
         }
-        File.open(@file + ".gotos", "w"){|f|
-          f.write(Marshal.dump(@gotos))
-        }
-        File.open(@file + ".actions", "w"){|f|
-          f.write(Marshal.dump(@actions))
+        File.open(@file + ".grammar", "w"){|f|
+          f.write(Marshal.dump({actions: @actions, gotos: @gotos}))
         }
       end
       

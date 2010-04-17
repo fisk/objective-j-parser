@@ -55,7 +55,7 @@ module LALR
           }];
           |#{
             (1...@rules.size).each.map do |i|
-              evaluator = @rule_evaluators[i-1]
+              evaluator = @rule_evaluators[@rules[i]]
               "R[#{i}].prototype.e = function(){#{evaluator}};"
             end.join("")
           }

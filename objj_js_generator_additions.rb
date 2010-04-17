@@ -109,7 +109,40 @@ rule(:OBJJ_IVAR_DECL=> [:OBJJ_TYPE, JS_IDENTIFIER, :OBJJ_ACCESSORS]){
         setterCore = $2 + "=value";
       }
       var setter = "new objj_method(sel_getUid(\"" + setterName + 
-        "\"), function(self, _cmd, value){with(self){" + setterCore + ";}}, [\"id\", \"id\"])";
+        "\"), function(self, _cmd, value){with(self){" + setterCore + ";}}, [\"void\", \"id\"])";
+      context._instanceMethods.push(setter);
+    }
+  }'
+}
+
+rule(:OBJJ_IVAR_DECL=> [OBJJ_OUTLET, :OBJJ_TYPE, JS_IDENTIFIER, :OBJJ_ACCESSORS]){
+  '$.push("new objj_ivar(\"");
+  $.push($3);
+  $.push("\")");
+  @4.e();
+  if (context._accessors)
+  {
+    var property = context._accessors["property"] || $3;
+    var getterName = context._accessors["getter"] || property;
+    var getter = "new objj_method(sel_getUid(\"" + getterName + 
+    "\"), function(self, _cmd){with(self){return " + $3 + ";}}, [\"id\"])";
+    context._instanceMethods.push(getter);
+    if (!context._accessors["readonly"])
+    {
+      var setterName = context._accessors["setter"];
+      if (!setterName)
+      {
+        var start = property.charAt(0) == "_" ? 1 : 0;
+        setterName = (start ? "_" : "") + "set" + property.substr(start, 1).toUpperCase() + property.substring(start + 1) + ":";
+      }
+      var setterCore = "";
+      if (context._accessors["copy"]){
+        setterCore = "if(" + $3 + "!== value)" + $3 + "=objj_msgSend(value, \"copy\")";
+      }else{
+        setterCore = $3 + "=value";
+      }
+      var setter = "new objj_method(sel_getUid(\"" + setterName + 
+        "\"), function(self, _cmd, value){with(self){" + setterCore + ";}}, [\"void\", \"id\"])";
       context._instanceMethods.push(setter);
     }
   }'
@@ -242,29 +275,36 @@ rule(:OBJJ_M_TYPE => [JS_SUB]){
   context._classMethod = false;'
 }
 rule(:OBJJ_M_ARG_TYPE => [JS_LPAR, :OBJJ_TYPE, JS_RPAR]){
-  '@2.e();'
+  '@2.e();context._methArgsType.push("\"" + $2 + "\"");'
+}
+rule(:OBJJ_M_ARG_TYPE => [JS_LPAR, OBJJ_ACTION, JS_RPAR]){
+  'context._methArgsType.push("\"void\"");'
 }
 rule(:OBJJ_M_ARG_TYPE => Epsilon.instance){''}
 
+rule(:OBJJ_TYPE => [:OBJJ_TYPE, JS_MUL]){
+  '@1.e();
+  $$ = $1 + "*";'
+}
 rule(:OBJJ_TYPE => JS_IDENTIFIER){
-  'context._methArgsType.push("\"" + $1 + "\"");'
+  '$$ = $1;'
 }
 rule(:OBJJ_TYPE => [JS_LONG, JS_LONG]){
-  'context._methArgsType.push("\"long long\"");'
+  '$$ = "long long";'
 }
 rule(:OBJJ_TYPE => [:OBJJ_TYPE_INTEGER]){
-  'context._methArgsType.push("\"" + $1 + "\"");'
+  '$$ = $1;'
 }
 rule(:OBJJ_TYPE => [JS_UNSIGNED, :OBJJ_TYPE_INTEGER]){
-  'context._methArgsType.push("\"" + "unsigned " + $2 + "\"");'
+  '$$ = "unsigned " + $2;'
 }
 rule(:OBJJ_TYPE => [JS_UNSIGNED]){
-  'context._methArgsType.push("\"unsigned\"");'
+  '$$ = "unsigned";'
 }
-rule(:OBJJ_TYPE_INTEGER => JS_LONG) {'$$ = "long"'}
-rule(:OBJJ_TYPE_INTEGER => JS_INT) {'$$ = "int"'}
-rule(:OBJJ_TYPE_INTEGER => JS_CHAR) {'$$ = "char"'}
-rule(:OBJJ_TYPE_INTEGER => JS_SHORT) {'$$ = "short"'}
+rule(:OBJJ_TYPE_INTEGER => JS_LONG) {'$$ = "long";'}
+rule(:OBJJ_TYPE_INTEGER => JS_INT) {'$$ = "int";'}
+rule(:OBJJ_TYPE_INTEGER => JS_CHAR) {'$$ = "char";'}
+rule(:OBJJ_TYPE_INTEGER => JS_SHORT) {'$$ = "short";'}
 
 # Selector stuff
 rule(:JS_PRIMARY_EXPR => :OBJJ_SEL) {

@@ -14,7 +14,7 @@ desc "Generate the interpretor and cache the grammar"
 task :generate
 file "generate" => [] do
   puts "generating"
-  `ruby1.9 objj_js_generator.rb`
+  exec "ruby1.9 objj_js_generator.rb"
 end
 
 desc "Clean away the cached tables and the interpretor" 

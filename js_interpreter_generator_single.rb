@@ -69,7 +69,7 @@ module LALR
               |error += i == index ? ("  " + matches[i] + "  ") : matches[i];
             |}
             |error += "\\n\\nRegex matched: " + tokens[index];
-            |throw(error);
+            |throw new SyntaxError(this.error_message(error));
           |}
           |start = new Date().getTime();
           |var result = this._parser.compile(matches, derivation);
@@ -84,6 +84,12 @@ module LALR
         |exports.preprocess = function(str, url, flags)
         |{
           |return new Preprocessor(str, url, flags).parse();
+        |};
+        |Preprocessor.prototype.error_message = function(errorMessage)
+        |{
+          |return errorMessage + " <Context File: "+ this._URL +
+            |(this._currentClass ? " Class: "+this._currentClass : "") +
+            |(this._currentSelector ? " Method: "+this._currentSelector : "") +">";
         |};
       end
       result + generate_lexer_single + generate_parser_single + "\n" + @footer

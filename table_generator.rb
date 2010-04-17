@@ -288,17 +288,12 @@ module LALR
   
   class TableGenerator
     
-    def initialize(rules, start)
-      @rules, @start = rules, start
-    end
-    
-    private
-    def augment_grammar()
-      @rules.insert 0, Rule.new(:S, [@start])
+    def initialize(rules)
+      @rules = rules.dup
     end
     
     def generate_item_sets()
-      grammar = augment_grammar()
+      grammar = @rules # already augmented grammar
       
       start_item = ItemSet.new grammar, Item.new(grammar[0], 0)
       start_item = start_item.closure
