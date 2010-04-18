@@ -106,7 +106,6 @@ module LALR
     end
     
     def pre_generation_methods
-=begin
       epsilon_eater = EpsilonEater.new(@rules, @rule_evaluators)
       epsilon_eater.get_rid_of_epsilons
       
@@ -114,7 +113,6 @@ module LALR
       @deleted_rules = epsilon_eater.deleted_rules
       @new_rules = epsilon_eater.new_rules
       @rule_evaluators = epsilon_eater.rule_evaluators
-=end
       
       @rules.insert 0, Rule.new(:S, [@start]) # agument grammar
     end

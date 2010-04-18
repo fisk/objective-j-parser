@@ -96,7 +96,7 @@ module LALR
               |} else if(temp = shift[state]["e"]) {
                 |s[++si] = state = temp;
               |} else {
-                |if (index == 0)
+                |if (index == 1)
                   |return o;
                 |this.se(index);
                 |return;
