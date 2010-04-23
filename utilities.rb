@@ -78,6 +78,11 @@ module LALR
       @action == arg.action and @number == arg.number
     end
     
+    def ==(arg)
+      return false if arg == nil
+      @action == arg.action and @number == arg.number
+    end
+    
     def hash
       @action.hash
     end

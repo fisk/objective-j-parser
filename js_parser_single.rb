@@ -59,10 +59,10 @@ module LALR
               end.join(",") + "}"
             end.join(",")
           }};
-        |
-        |function #{@name}_parser()
-        |{
-        |}
+          |
+          |function #{@name}_parser()
+          |{
+          |}
           |#{@name}_parser.prototype.se = function(index)
           |{
             |throw index;

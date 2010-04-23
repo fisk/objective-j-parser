@@ -75,6 +75,7 @@ module LALR
     end
     
     def first_rec(done)
+      return @first if @first != nil
       symbol = @rule.productions[@dot]
       return Set[Epsilon.instance] if symbol == nil or done.include? self
       done << self
@@ -84,8 +85,11 @@ module LALR
         item_first = item.first_rec(done)
         s |= item_first unless item_first == Set[Epsilon.instance]
       end
-      return next_item.first_rec(done) if s.empty?
-      s
+      @first = if s.empty?
+        next_item.first_rec(done)
+      else
+        s
+      end
     end
     
     ItemLA = Struct.new(:item, :la)
@@ -378,6 +382,11 @@ module LALR
         set_num = set_to_num[rule_end.set]
         rule_num = rule_to_num[rule_root.rule]
         rule_root.la.each do |la|
+          if actions[set_num][la] and actions[set_num][la] != reduce(rule_num) and actions[set_num][la].number
+            puts "Conflict for symbol: #{la}"
+            puts "reduce #{rule_root.rule}"
+            puts "#{actions[set_num][la].action} #{@rules[actions[set_num][la].number]}"
+          end
           actions[set_num][la] = reduce(rule_num) if actions[set_num][la] == nil
         end
       end

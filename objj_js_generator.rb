@@ -309,7 +309,7 @@ rule(:JS_ARRAY_LITERAL => [JS_ALPAR, :JS_ELEMENT_LIST, JS_ARPAR]) {
 
 
 rule(:JS_ELEMENT_LIST => [:JS_ASSIGN_EXPR]) {'@1.e();'}
-rule(:JS_ELEMENT_LIST => [:JS_ELEMENT_LIST, JS_COMMA, :JS_ASSIGN_EXPR]) {
+rule(:JS_ELEMENT_LIST => [:JS_ASSIGN_EXPR, JS_COMMA, :JS_ELEMENT_LIST]) {
   '@1.e();
   $.push(",");
   @3.e();'
@@ -346,11 +346,11 @@ rule(:JS_PROP_NAME => [JS_NUMERIC_LITERAL]) {'$.push($1);'}
 rule(:JS_MEMBER_EXPR => [:JS_PRIMARY_EXPR]) {'@1.e();'}
 rule(:JS_MEMBER_EXPR => [:JS_FUNC_EXPR]) {'@1.e();'}
 rule(:JS_MEMBER_EXPR => [:JS_MEMBER_EXPR, :JS_PROPERTY_SUFFIX]) {'@1.e();@2.e();'}
-rule(:JS_MEMBER_EXPR => [JS_NEW, :JS_MEMBER_EXPR, :JS_ARGS]) {'$.push("new ");@2.e();@3.e();'}
 
 
 rule(:JS_NEW_EXPR => [:JS_MEMBER_EXPR]) {'@1.e();'}
 rule(:JS_NEW_EXPR => [JS_NEW, :JS_MEMBER_EXPR]) {'$.push("new ");@2.e();'}
+rule(:JS_NEW_EXPR => [JS_NEW, :JS_MEMBER_EXPR, :JS_ARGS]) {'$.push("new ");@2.e();@3.e();'}
 
 
 rule(:JS_CALL_EXPR => [:JS_MEMBER_EXPR, :JS_ARGS]) {'@1.e();@2.e();'}
@@ -375,7 +375,7 @@ rule(:JS_ARGS => [JS_LPAR, :JS_ARG_LIST, JS_RPAR]) {
 
 
 rule(:JS_ARG_LIST => [:JS_ASSIGN_EXPR]) {'@1.e();'}
-rule(:JS_ARG_LIST => [:JS_ARG_LIST, JS_COMMA, :JS_ASSIGN_EXPR]) {'@1.e();$.push(",");@3.e();'}
+rule(:JS_ARG_LIST => [:JS_ASSIGN_EXPR, JS_COMMA, :JS_ARG_LIST]) {'@1.e();$.push(",");@3.e();'}
 
 
 rule(:JS_LHS_EXPR => [:JS_NEW_EXPR]) {'@1.e();'}
@@ -388,7 +388,7 @@ rule(:JS_UNARY_EXPR => [JS_DELETE, :JS_UNARY_EXPR]) {'$.push("delete ");@2.e();'
 
 
 rule(:JS_NUM_EXPR => [:JS_UNARY_EXPR]) {'@1.e();'}
-rule(:JS_NUM_EXPR => [:JS_NUM_EXPR, :JS_NUM_OP, :JS_UNARY_EXPR]) {'@1.e();@2.e();@3.e();'}
+rule(:JS_NUM_EXPR => [:JS_UNARY_EXPR, :JS_NUM_OP, :JS_NUM_EXPR]) {'@1.e();@2.e();@3.e();'}
 
 
 rule(:JS_NUM_OP => [JS_RSRSRS]) {'$.push(">>>");'}
@@ -402,7 +402,7 @@ rule(:JS_NUM_OP => [JS_SUB]) {'$.push("-");'}
 
 
 rule(:JS_REL_EXPR => [:JS_NUM_EXPR]) {'@1.e();'}
-rule(:JS_REL_EXPR => [:JS_REL_EXPR, :JS_REL_OP, :JS_NUM_EXPR]) {'@1.e();@2.e();@3.e();'}
+rule(:JS_REL_EXPR => [:JS_NUM_EXPR, :JS_REL_OP, :JS_REL_EXPR]) {'@1.e();@2.e();@3.e();'}
 
 
 rule(:JS_REL_OP => [JS_RSEQ]) {'$.push(">=");'}
@@ -435,7 +435,7 @@ rule(:JS_UNARY_EXPR => :JS_IN_EXPR){
 
 
 rule(:JS_BITWISE_EXPR => [:JS_REL_EXPR]) {'@1.e();'}
-rule(:JS_BITWISE_EXPR => [:JS_BITWISE_EXPR, :JS_BITWISE_OP, :JS_REL_EXPR]) {'@1.e();@2.e();@3.e();'}
+rule(:JS_BITWISE_EXPR => [:JS_REL_EXPR, :JS_BITWISE_OP, :JS_BITWISE_EXPR]) {'@1.e();@2.e();@3.e();'}
 
 
 rule(:JS_BITWISE_OP => [JS_BAND]) {'$.push($1);'}
@@ -444,7 +444,7 @@ rule(:JS_BITWISE_OP => [JS_BXOR]) {'$.push($1);'}
 
 
 rule(:JS_LOGICAL_EXPR => [:JS_BITWISE_EXPR]) {'@1.e();'}
-rule(:JS_LOGICAL_EXPR => [:JS_LOGICAL_EXPR, :JS_LOGICAL_OP, :JS_BITWISE_EXPR]) {'@1.e();@2.e();@3.e();'}
+rule(:JS_LOGICAL_EXPR => [:JS_BITWISE_EXPR, :JS_LOGICAL_OP, :JS_LOGICAL_EXPR]) {'@1.e();@2.e();@3.e();'}
 
 
 rule(:JS_LOGICAL_OP => [JS_ANDAND]) {'$.push("&&");'}
@@ -452,7 +452,7 @@ rule(:JS_LOGICAL_OP => [JS_OROR]) {'$.push("||");'}
 
 
 rule(:JS_COND_EXPR => [:JS_LOGICAL_EXPR]) {'@1.e();'}
-rule(:JS_COND_EXPR => [:JS_LOGICAL_EXPR, JS_QUESTION, :JS_ASSIGN_EXPR, JS_COLON, :JS_ASSIGN_EXPR]) {'@1.e();$.push($2);@3.e();@4.e();@5.e();'}
+rule(:JS_COND_EXPR => [:JS_LOGICAL_EXPR, JS_QUESTION, :JS_COND_EXPR, JS_COLON, :JS_COND_EXPR]) {'@1.e();$.push($2);@3.e();@4.e();@5.e();'}
 
 
 rule(:JS_ASSIGN_EXPR => [:JS_COND_EXPR]) {'@1.e();'}
@@ -477,7 +477,7 @@ rule(:JS_ASSIGN_OP => [JS_BXOREQ]) {'$.push("^=");'}
 
 
 rule(:JS_EXPR => [:JS_ASSIGN_EXPR]) {'@1.e();'}
-rule(:JS_EXPR => [:JS_EXPR, JS_COMMA, :JS_ASSIGN_EXPR]) {'@1.e();$.push(",");@3.e();'}
+rule(:JS_EXPR => [:JS_ASSIGN_EXPR, JS_COMMA, :JS_EXPR]) {'@1.e();$.push(",");@3.e();'}
 
 
 rule(:JS_REST => [JS_DOTDOTDOT, JS_IDENTIFIER]) {''}
